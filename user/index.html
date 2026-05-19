@@ -2,44 +2,49 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>HO体育 - 在线咨询</title>
-    
     <script src="https://cdn.staticfile.org/firebase/8.10.1/firebase-app.js"></script>
     <script src="https://cdn.staticfile.org/firebase/8.10.1/firebase-database.js"></script>
-    
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; display: flex; justify-content: center; height: 100vh; }
-        .chat-container { width: 100%; max-width: 500px; background: #fff; display: flex; flex-direction: column; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
-        .chat-header { background: #00a854; color: white; padding: 15px; text-align: center; font-size: 16px; font-weight: bold; }
-        #messages { flex: 1; padding: 15px; overflow-y: auto; background: #eaeaea; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; width: 100%; overflow: hidden; background: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }
+        
+        /* 手机端弹性全屏容器，彻底防打字变形 */
+        .chat-container { width: 100%; max-width: 500px; height: 100%; background: #fff; display: flex; flex-direction: column; margin: 0 auto; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
+        .chat-header { background: #00a854; color: white; padding: 15px; text-align: center; font-size: 16px; font-weight: bold; flex-shrink: 0; }
+        
+        /* 聊天消息流区域 */
+        #messages { flex: 1; padding: 15px; overflow-y: auto; background: #eaeaea; -webkit-overflow-scrolling: touch; }
         .msg-row { display: flex; margin-bottom: 15px; width: 100%; align-items: flex-start; }
         .msg-row.user { justify-content: flex-end; }
         .msg-row.admin { justify-content: flex-start; }
         
-        /* 纯前端绘图技术完美画出你的白底圆圈+蓝绿渐变 HO体育 LOGO 头像 */
+        /* 圆形头像样式 */
         .avatar { width: 38px; height: 38px; border-radius: 50%; margin: 0 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-size: cover; background-position: center; }
         .user .avatar { background-color: #00bac7; } 
+        
+        /* 🎨 完美临摹老哥的真 LOGO 头像：白字HO，绿字体育，精致黑底圆圈+绿环边框 */
         .admin .avatar { 
-            background-color: #fff; 
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="white" stroke="%23eee" stroke-width="1"/><path d="M35,25 C42,32 58,32 65,25 C58,38 42,38 35,25 Z M35,25 L35,70 C42,65 58,65 65,70 L65,25" fill="%2300a2ed"/><path d="M50,25 L50,70" stroke="white" stroke-width="2"/><text x="50" y="52" font-family="Arial, sans-serif" font-weight="900" font-size="20" fill="%23111" text-anchor="middle">HO</text><text x="50" y="80" font-family="SimHei, sans-serif" font-weight="bold" font-size="16" fill="%2300a854" text-anchor="middle">体育</text></svg>'); 
+            background-color: #000; 
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="47" fill="black" stroke="%2300a854" stroke-width="3"/><text x="50" y="44" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="28" fill="white" dominant-baseline="middle" text-anchor="middle">HO</text><text x="50" y="74" font-family="SimHei, Microsoft YaHei, sans-serif" font-weight="bold" font-size="20" fill="%2300a854" dominant-baseline="middle" text-anchor="middle">体育</text></svg>'); 
         } 
         
         .bubble-name { font-size: 12px; color: #888; margin-left: 58px; margin-bottom: 2px; text-align: left; }
-        .bubble { max-width: calc(70% - 48px); padding: 11px 15px; border-radius: 8px; font-size: 14px; line-height: 1.5; word-break: break-all; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .bubble { max-width: calc(100% - 110px); padding: 11px 15px; border-radius: 8px; font-size: 15px; line-height: 1.4; word-break: break-all; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .user .bubble { background: #95ec69; color: #000; border-top-right-radius: 0; }
         .admin .bubble { background: #fff; color: #000; border-top-left-radius: 0; }
         
-        .input-area { display: flex; align-items: center; padding: 10px; background: #f7f7f7; border-top: 1px solid #ddd; }
-        #msg-input { flex: 1; height: 40px; padding: 0 12px; border: 1px solid #ddd; border-radius: 4px; outline: none; font-size: 14px; }
-        .btn-send { height: 40px; border: none; border-radius: 4px; margin-left: 8px; cursor: pointer; font-size: 14px; background: #00a854; color: white; padding: 0 20px; font-weight: bold; }
+        /* 手机端专用免挤压底部输入框布局 */
+        .input-area { display: flex; align-items: center; padding: 10px; background: #f7f7f7; border-top: 1px solid #ddd; flex-shrink: 0; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+        #msg-input { flex: 1; height: 40px; padding: 0 12px; border: 1px solid #ddd; border-radius: 4px; outline: none; font-size: 15px; background: #fff; -webkit-appearance: none; }
+        .btn-send { height: 40px; border: none; border-radius: 4px; margin-left: 8px; cursor: pointer; font-size: 15px; background: #00a854; color: white; padding: 0 20px; font-weight: bold; -webkit-appearance: none; }
     </style>
 </head>
 <body>
 
 <div class="chat-container">
-    <div class="chat-header">HO体育 - 在线咨询</div>
+    <div class="chat-header">HO体育 - 在线客服</div>
     <div id="messages"></div>
     <div class="input-area">
         <input type="text" id="msg-input" placeholder="请输入您的问题..." onkeydown="if(event.keyCode==13) sendText()">
@@ -49,8 +54,11 @@
 
 <script>
     var db;
-    var userId = localStorage.getItem("chat_user_id") || "chat_" + Date.now();
-    localStorage.setItem("chat_user_id", userId);
+    let userId = localStorage.getItem("chat_user_id");
+    if (!userId) {
+        userId = "粉丝_" + Math.random().toString(16).substring(2, 6);
+        localStorage.setItem("chat_user_id", userId);
+    }
 
     window.onload = function() {
         const firebaseConfig = {
@@ -62,13 +70,10 @@
             messagingSenderId: "988901895318",
             appId: "1:988901895318:web:b1736c54a224570253a6b7"
         };
-
         if (typeof firebase !== 'undefined') {
             if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
             db = firebase.database();
             initChat();
-        } else {
-            document.getElementById("messages").innerHTML = "<div style='text-align:center;color:red;padding:20px;'>组件加载失败，请强行刷新页面重试</div>";
         }
     };
 
@@ -81,7 +86,7 @@
             container.style.marginBottom = "15px";
             
             if (msg.sender === "user") {
-                container.innerHTML = `<div class="msg-row user"><div class="bubble">${msg.text}</div><div class="avatar">粉</div></div>`;
+                container.innerHTML = `<div class="msg-row user"><div class="bubble">${msg.text}</div><div class="avatar">我</div></div>`;
             } else {
                 container.innerHTML = `<div class="bubble-name">HO体育-甜甜</div><div class="msg-row admin"><div class="avatar"></div><div class="bubble">${msg.text}</div></div>`;
             }
@@ -94,8 +99,11 @@
         const input = document.getElementById("msg-input");
         const text = input.value.trim();
         if (!text || !db) return;
+
         db.ref("chats/" + userId + "/messages").push({ sender: "user", text: text, timestamp: Date.now() });
+        db.ref("chats/" + userId + "/info").set({ lastMsg: text, timestamp: Date.now() });
         input.value = "";
+        input.focus();
     }
 </script>
 </body>
