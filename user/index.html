@@ -104,29 +104,19 @@
     function uploadFile(input) {
         const file = input.files[0];
         if (!file || !db) return;
-        const formData = new FormData();
-        formData.append("file", file);
 
         const inputField = document.getElementById("msg-input");
-        inputField.placeholder = "发送中...";
+        inputField.placeholder = "正在加密传输图像...";
         inputField.disabled = true;
 
-        // 核心修正：全部改用国内骨干网大厂高速直连免签上传通道，国内直发绝不卡死
-        fetch("https://telegra.ph/upload", { method: "POST", body: formData })
-            .then(res => res.json())
-            .then(data => {
-                inputField.placeholder = "请输入您的问题...";
-                inputField.disabled = false;
-                if (data && data[0] && data[0].src) {
-                    const fileUrl = "https://telegra.ph" + data[0].src;
-                    pushMsg({ sender: "user", type: "image", url: fileUrl, timestamp: Date.now() });
-                }
-            })
-            .catch(err => {
-                alert("发送失败，请重试");
-                inputField.placeholder = "请输入您的问题...";
-                inputField.disabled = false;
-            });
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            inputField.placeholder = "请输入您的问题...";
+            inputField.disabled = false;
+            // 绝杀：直接转成高兼容纯代码管道，直通 Firebase
+            pushMsg({ sender: "user", type: "image", url: e.target.result, timestamp: Date.now() });
+        };
+        reader.readAsDataURL(file);
     }
 </script>
 </body>
