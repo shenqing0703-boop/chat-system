@@ -20,9 +20,16 @@
         .msg-row { display: flex; margin-bottom: 15px; width: 100%; }
         .msg-row.admin { justify-content: flex-end; }
         .msg-row.user { justify-content: flex-start; }
-        .bubble { max-width: 65%; padding: 10px 14px; border-radius: 8px; font-size: 14px; line-height: 1.5; word-break: break-all; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        
+        /* 头像样式 */
+        .avatar { width: 36px; height: 36px; border-radius: 4px; margin: 0 10px; flex-shrink: 0; background-size: cover; background-position: center; }
+        .user .avatar { background-image: url('https://img2.baidu.com/it/u=3093226316,2111005707&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500'); } /* 这里替换你的默认用户头像链接 */
+        .admin .avatar { background-image: url('https://img2.baidu.com/it/u=1004169720,2962309831&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500'); } /* 这里替换你的默认客服头像链接 */
+
+        .bubble { max-width: calc(65% - 46px); padding: 10px 14px; border-radius: 8px; font-size: 14px; line-height: 1.5; word-break: break-all; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .admin .bubble { background: #95ec69; color: #000; }
         .user .bubble { background: #fff; color: #000; }
+        
         .bubble img { max-width: 100%; border-radius: 4px; margin-top: 5px; cursor: pointer; }
         .input-area { display: flex; align-items: center; padding: 15px; background: #fff; border-top: 1px solid #e8e8e8; }
         #msg-input { flex: 1; height: 40px; padding: 0 12px; border: 1px solid #d9d9d9; border-radius: 4px; outline: none; font-size: 14px; }
@@ -91,7 +98,13 @@
                     content = `📄 <a href="${msg.url}" target="_blank" style="color:#00a854;">下载文件 (${msg.name})</a>`;
                 }
 
-                row.innerHTML = `<div class="bubble">${content}</div>`;
+                // 修改这里，加上头像
+                if (msg.sender === "admin") {
+                    row.innerHTML = `<div class="bubble">${content}</div><div class="avatar"></div>`;
+                } else {
+                    row.innerHTML = `<div class="avatar"></div><div class="bubble">${content}</div>`;
+                }
+
                 box.appendChild(row);
                 box.scrollTop = box.scrollHeight;
             });
