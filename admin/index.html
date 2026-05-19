@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>客服后台管理大厅</title>
+    <title>HO体育 - 客服管理后台</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="../firebase.js"></script>
@@ -10,44 +10,53 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; display: flex; height: 100vh; overflow: hidden; }
         .sidebar { width: 280px; background: #fff; border-right: 1px solid #e8e8e8; display: flex; flex-direction: column; }
-        .sidebar-header { padding: 15px; font-size: 16px; font-weight: bold; border-bottom: 1px solid #e8e8e8; background: #fafafa; }
+        .sidebar-header { padding: 15px; font-size: 16px; font-weight: bold; border-bottom: 1px solid #e8e8e8; background: #fafafa; color: #00a854; text-align: center; }
         #list { flex: 1; overflow-y: auto; }
-        .chat-item { padding: 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.3s; font-size: 14px; color: #333; }
+        .chat-item { padding: 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.3s; font-size: 14px; color: #333; display: flex; align-items: center; }
         .chat-item:hover, .chat-item.active { background: #e6f7ff; color: #1890ff; font-weight: bold; }
+        .chat-item-avatar { width: 30px; height: 30px; border-radius: 50%; background-color: #ccc; background-size: cover; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'); margin-right: 10px; flex-shrink: 0; }
+        
         .main-chat { flex: 1; display: flex; flex-direction: column; background: #f5f5f5; }
-        .main-header { padding: 15px; background: #fff; font-size: 16px; font-weight: bold; border-bottom: 1px solid #e8e8e8; }
+        .main-header { padding: 15px; background: #fff; font-size: 16px; font-weight: bold; border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; }
+        .header-avatar { width: 34px; height: 34px; border-radius: 50%; background-color: #fff; background-size: cover; background-image: url('https://files/image_10.png'); margin-right: 10px; border: 1px solid #eee; }
+
         #messages { flex: 1; padding: 20px; overflow-y: auto; background: #f4f5f7; }
-        .msg-row { display: flex; margin-bottom: 15px; width: 100%; }
+        .msg-row { display: flex; margin-bottom: 15px; width: 100%; align-items: flex-start; }
         .msg-row.admin { justify-content: flex-end; }
         .msg-row.user { justify-content: flex-start; }
         
-        /* 头像样式 */
-        .avatar { width: 36px; height: 36px; border-radius: 4px; margin: 0 10px; flex-shrink: 0; background-size: cover; background-position: center; }
-        .user .avatar { background-image: url('https://img2.baidu.com/it/u=3093226316,2111005707&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500'); } /* 这里替换你的默认用户头像链接 */
-        .admin .avatar { background-image: url('https://img2.baidu.com/it/u=1004169720,2962309831&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500'); } /* 这里替换你的默认客服头像链接 */
+        /* 终极定制头像样式 */
+        .avatar { width: 38px; height: 38px; border-radius: 50%; margin: 0 10px; flex-shrink: 0; background-size: cover; background-position: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 1px solid #eee; }
+        /* 粉丝头像：灰色匿名图标 */
+        .user .avatar { background-color: #ccc; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'); } 
+        /* 客服头像：HO体育 LOGO */
+        .admin .avatar { background-color: #fff; background-image: url('https://files/image_10.png'); } 
 
-        .bubble { max-width: calc(65% - 46px); padding: 10px 14px; border-radius: 8px; font-size: 14px; line-height: 1.5; word-break: break-all; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .admin .bubble { background: #95ec69; color: #000; }
-        .user .bubble { background: #fff; color: #000; }
+        .bubble-name { font-size: 12px; color: #888; margin-bottom: 4px; }
+        .admin .bubble-name { text-align: right; margin-right: 58px; }
+
+        .bubble { max-width: calc(65% - 48px); padding: 11px 15px; border-radius: 8px; font-size: 14px; line-height: 1.5; word-break: break-all; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .admin .bubble { background: #95ec69; color: #000; border-top-right-radius: 0; }
+        .user .bubble { background: #fff; color: #000; border-top-left-radius: 0; }
         
         .bubble img { max-width: 100%; border-radius: 4px; margin-top: 5px; cursor: pointer; }
         .input-area { display: flex; align-items: center; padding: 15px; background: #fff; border-top: 1px solid #e8e8e8; }
-        #msg-input { flex: 1; height: 40px; padding: 0 12px; border: 1px solid #d9d9d9; border-radius: 4px; outline: none; font-size: 14px; }
-        .btn { height: 40px; border: none; border-radius: 4px; margin-left: 10px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
-        .btn-send { background: #00a854; color: white; padding: 0 24px; font-weight: bold; }
-        .btn-file { background: #f5f5f5; color: #555; padding: 0 15px; font-size: 20px; border: 1px solid #d9d9d9; }
+        #msg-input { flex: 1; height: 42px; padding: 0 15px; border: 1px solid #d9d9d9; border-radius: 4px; outline: none; font-size: 14px; }
+        .btn { height: 42px; border: none; border-radius: 4px; margin-left: 10px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .btn-send { background: #00a854; color: white; padding: 0 25px; }
+        .btn-file { background: #f5f5f5; color: #555; padding: 0 16px; font-size: 22px; border: 1px solid #d9d9d9; }
         #file-input { display: none; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="sidebar-header">👥 粉丝接待大厅</div>
+        <div class="sidebar-header">HO体育 接待大厅</div>
         <div id="list">加载中...</div>
     </div>
 
     <div class="main-chat">
-        <div class="main-header">当前对话: <span id="current-title" style="color: #00a854;">未选择客户</span></div>
+        <div class="main-header"><div class="header-avatar"></div>HO体育-甜甜 <span style="color:#888;font-weight:normal;margin-left:10px;">(正在接待: <span id="current-title" style="color: #00a854;">未选择</span>)</span></div>
         <div id="messages"></div>
         <div class="input-area">
             <label class="btn btn-file" for="file-input">📎</label>
@@ -69,7 +78,7 @@
             for (let id in data) {
                 const div = document.createElement("div");
                 div.className = "chat-item" + (currentChat === id ? " active" : "");
-                div.innerText = "👤 用户: " + id.substring(5, 12) + "..."; // 简短截取展示
+                div.innerHTML = `<div class="chat-item-avatar"></div>👤 粉丝: ${id.substring(5, 11)}...`;
                 div.onclick = () => {
                     document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
                     div.classList.add('active');
@@ -81,7 +90,7 @@
 
         function loadChat(id) {
             currentChat = id;
-            document.getElementById("current-title").innerText = id;
+            document.getElementById("current-title").innerText = id.substring(5, 13) + "...";
             const box = document.getElementById("messages");
             box.innerHTML = "";
 
@@ -89,7 +98,8 @@
             db.ref("chats/" + id + "/messages").on("child_added", snap => {
                 const msg = snap.val();
                 const row = document.createElement("div");
-                row.className = "msg-row " + msg.sender;
+                row.style.width = "100%";
+                row.style.marginBottom = "18px";
 
                 let content = msg.text;
                 if (msg.type === "image") {
@@ -98,11 +108,11 @@
                     content = `📄 <a href="${msg.url}" target="_blank" style="color:#00a854;">下载文件 (${msg.name})</a>`;
                 }
 
-                // 修改这里，加上头像
+                // 终极定制布局：客服名字写死
                 if (msg.sender === "admin") {
-                    row.innerHTML = `<div class="bubble">${content}</div><div class="avatar"></div>`;
+                    row.innerHTML = `<div class="bubble-name">HO体育-甜甜</div><div class="msg-row admin"><div class="bubble">${content}</div><div class="avatar"></div></div>`;
                 } else {
-                    row.innerHTML = `<div class="avatar"></div><div class="bubble">${content}</div>`;
+                    row.innerHTML = `<div class="msg-row user"><div class="avatar"></div><div class="bubble">${content}</div></div>`;
                 }
 
                 box.appendChild(row);
@@ -141,13 +151,7 @@
                     if (data && data[0] && data[0].src) {
                         const fileUrl = "https://telegra.ph" + data[0].src;
                         const isImg = file.type.startsWith("image/");
-                        pushMsg({
-                            sender: "admin",
-                            type: isImg ? "image" : "file",
-                            url: fileUrl,
-                            name: file.name,
-                            timestamp: Date.now()
-                        });
+                        pushMsg({ sender: "admin", type: isImg ? "image" : "file", url: fileUrl, name: file.name, timestamp: Date.now() });
                     }
                 })
                 .catch(err => {
