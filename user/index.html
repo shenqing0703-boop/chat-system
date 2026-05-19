@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HO体育 - 在线咨询</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/firebase/8.10.1/firebase-app.js"></script>
+    <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/firebase/8.10.1/firebase-database.js"></script>
+    
     <script src="../firebase.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -17,12 +19,17 @@
         .msg-row.user { justify-content: flex-end; }
         .msg-row.admin { justify-content: flex-start; }
         
-        /* 终极定制头像样式 */
-        .avatar { width: 38px; height: 38px; border-radius: 50%; margin: 0 10px; flex-shrink: 0; background-size: cover; background-position: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 1px solid #eee; }
-        /* 粉丝头像：灰色匿名图标 */
-        .user .avatar { background-color: #ccc; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'); } 
-        /* 客服头像：HO体育 LOGO */
-        .admin .avatar { background-color: #fff; background-image: url('https://files/image_10.png'); } 
+        /* 纯前端绘图技术：100% 免疫任何网络防盗链和封锁 */
+        .avatar { width: 38px; height: 38px; border-radius: 50%; margin: 0 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-size: cover; background-position: center; }
+        
+        /* 粉丝头像：精美天蓝色 */
+        .user .avatar { background-color: #00bac7; background-image: none; } 
+        
+        /* 客服头像：网页本地画出黑底白字绿标的“HO体育”专属 LOGO */
+        .admin .avatar { 
+            background-color: #000; 
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="black"/><text x="50%" y="42%" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="28" fill="white" domaintant-baseline="middle" text-anchor="middle">HO</text><text x="50%" y="78%" font-family="SimHei, Microsoft YaHei, sans-serif" font-weight="bold" font-size="20" fill="%2300a854" domaintant-baseline="middle" text-anchor="middle">体育</text></svg>'); 
+        } 
         
         .bubble-name { font-size: 12px; color: #888; margin-bottom: 4px; }
         .admin .bubble-name { margin-left: 58px; text-align: left; }
@@ -31,13 +38,10 @@
         .user .bubble { background: #95ec69; color: #000; border-top-right-radius: 0; }
         .admin .bubble { background: #fff; color: #000; border-top-left-radius: 0; }
         
-        .bubble img { max-width: 100%; border-radius: 4px; margin-top: 5px; cursor: pointer; }
         .input-area { display: flex; align-items: center; padding: 10px; background: #f7f7f7; border-top: 1px solid #ddd; }
         #msg-input { flex: 1; height: 40px; padding: 0 12px; border: 1px solid #ddd; border-radius: 4px; outline: none; font-size: 14px; }
         .btn { height: 40px; border: none; border-radius: 4px; margin-left: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .btn-send { background: #00a854; color: white; padding: 0 20px; }
-        .btn-file { background: #e9e9e9; color: #333; padding: 0 14px; font-size: 22px; border: 1px solid #ccc; }
-        #file-input { display: none; }
     </style>
 </head>
 <body>
@@ -46,8 +50,6 @@
     <div class="chat-header">HO体育 - 在线客服</div>
     <div id="messages"></div>
     <div class="input-area">
-        <label class="btn btn-file" for="file-input">📎</label>
-        <input type="file" id="file-input" accept="image/*,application/pdf" onchange="uploadFile(this)">
         <input type="text" id="msg-input" placeholder="请输入您的问题..." onkeydown="if(event.keyCode==13) sendText()">
         <button class="btn btn-send" onclick="sendText()">发送</button>
     </div>
@@ -66,13 +68,7 @@
         row.style.marginBottom = "15px";
         
         let content = msg.text;
-        if (msg.type === "image") {
-            content = `<img src="${msg.url}" onclick="window.open('${msg.url}')" />`;
-        } else if (msg.type === "file") {
-            content = `📄 <a href="${msg.url}" target="_blank" style="color:#00a854;">下载文件 (${msg.name})</a>`;
-        }
 
-        // 终极定制布局：客服名字写死
         if (msg.sender === "user") {
             row.innerHTML = `<div class="msg-row user"><div class="bubble">${content}</div><div class="avatar"></div></div>`;
         } else {
@@ -83,44 +79,17 @@
         box.scrollTop = box.scrollHeight;
     });
 
+    // 修复无头像显示的后置渲染
+    db.ref("chats/" + userId + "/messages").once("value", () => {
+        document.querySelectorAll('.user .avatar').forEach(el => el.innerText = "粉");
+    });
+
     function sendText() {
         const input = document.getElementById("msg-input");
         const text = input.value.trim();
         if (!text) return;
-        pushMsg({ sender: "user", type: "text", text: text, timestamp: Date.now() });
+        db.ref("chats/" + userId + "/messages").push({ sender: "user", text: text, timestamp: Date.now() });
         input.value = "";
-    }
-
-    function pushMsg(msgObj) {
-        db.ref("chats/" + userId + "/messages").push(msgObj);
-    }
-
-    function uploadFile(input) {
-        const file = input.files[0];
-        if (!file) return;
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const inputField = document.getElementById("msg-input");
-        inputField.placeholder = "文件上传中...";
-        inputField.disabled = true;
-
-        fetch("https://telegra.ph/upload", { method: "POST", body: formData })
-            .then(res => res.json())
-            .then(data => {
-                inputField.placeholder = "请输入您的问题...";
-                inputField.disabled = false;
-                if (data && data[0] && data[0].src) {
-                    const fileUrl = "https://telegra.ph" + data[0].src;
-                    const isImg = file.type.startsWith("image/");
-                    pushMsg({ sender: "user", type: isImg ? "image" : "file", url: fileUrl, name: file.name, timestamp: Date.now() });
-                }
-            })
-            .catch(err => {
-                alert("上传失败");
-                inputField.placeholder = "请输入您的问题...";
-                inputField.disabled = false;
-            });
     }
 </script>
 </body>
