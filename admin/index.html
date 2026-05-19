@@ -5,6 +5,8 @@
     <title>HO体育 - 客服管理后台</title>
     <script src="https://cdn.staticfile.org/firebase/8.10.1/firebase-app.js"></script>
     <script src="https://cdn.staticfile.org/firebase/8.10.1/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; display: flex; height: 100vh; overflow: hidden; }
@@ -24,7 +26,7 @@
         .header-avatar { width: 34px; height: 34px; border-radius: 50%; background-color: #000; margin-right: 10px; background-size: cover; background-position: center;
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="47" fill="black" stroke="%2300a854" stroke-width="3"/><text x="50" y="44" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="28" fill="white" dominant-baseline="middle" text-anchor="middle">HO</text><text x="50" y="74" font-family="SimHei, Microsoft YaHei, sans-serif" font-weight="bold" font-size="20" fill="%2300a854" dominant-baseline="middle" text-anchor="middle">体育</text></svg>'); 
         }
-        #messages { flex: 1; padding: 20px; overflow-y: auto; background: #f4f5f7; }
+        #messages { flex: 1; padding: 20px; overflow-y: auto; background: #f4f5f7; scroll-behavior: smooth; }
         .msg-row { display: flex; margin-bottom: 15px; width: 100%; align-items: flex-start; }
         .msg-row.admin { justify-content: flex-end; }
         .msg-row.user { justify-content: flex-start; }
@@ -62,12 +64,11 @@
             <button class="btn-send" onclick="sendText()">发送</button>
         </div>
     </div>
+    <div class="pswp" tabindex="-1" role="dialog" aria-hidden="true"><div class="pswp__bg"></div><div class="pswp__scroll-wrap"><div class="pswp__container"><div class="pswp__item"></div><div class="pswp__item"></div><div class="pswp__item"></div></div><div class="pswp__ui pswp__ui--hidden"><div class="pswp__top-bar"><div class="pswp__counter"></div><button class="pswp__button pswp__button--close" title="关闭 (Esc)"></button><button class="pswp__button pswp__button--zoom" title="放大/缩小"></button><div class="pswp__preloader"><div class="pswp__preloader__icn"><div class="pswp__preloader__cut"><div class="pswp__preloader__donut"></div></div></div></div></div><div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap"><div class="pswp__share-tooltip"></div></div><button class="pswp__button pswp__button--arrow--left" title="上一张"></button><button class="pswp__button pswp__button--arrow--right" title="下一张"></button><div class="pswp__caption"><div class="pswp__caption__center"></div></div></div></div></div>
+    <script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+    <script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
     <script>
-        var db;
-        var currentChat = null;
-        var unreadChats = {}; 
-        var flashInterval = null;
-
+        var db; var currentChat = null; var unreadChats = {}; var flashInterval = null; var currentChatImageItems = [];
         window.onload = function() {
             const firebaseConfig = {
                 apiKey: "AIzaSyDDs2uCueE3NJdZZxpMGp-1Snrt34E4nf0",
@@ -80,137 +81,60 @@
             };
             if (typeof firebase !== 'undefined') {
                 if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-                db = firebase.database();
-                initAdminList();
+                db = firebase.database(); initAdminList();
             }
         };
-
         function initAdminList() {
             db.ref("chats").on("value", snap => {
-                const data = snap.val();
-                const listDiv = document.getElementById("list");
-                listDiv.innerHTML = "";
+                const data = snap.val(); const listDiv = document.getElementById("list"); listDiv.innerHTML = "";
                 if (!data) { listDiv.innerHTML = "<div style='padding:20px;color:gray;text-align:center;'>暂无粉丝咨询</div>"; return; }
-
                 let sortedIds = Object.keys(data).sort((a, b) => {
                     let timeA = (data[a].info && data[a].info.timestamp) ? data[a].info.timestamp : 0;
                     let timeB = (data[b].info && data[b].info.timestamp) ? data[b].info.timestamp : 0;
                     return timeB - timeA;
                 });
-
                 sortedIds.forEach(id => {
                     const info = data[id].info || { lastMsg: "点击查看" };
                     if (currentChat !== id && info.lastMsg && !info.lastMsg.startsWith("甜甜:")) {
-                        if (!unreadChats[id] || unreadChats[id] !== info.timestamp) {
-                            unreadChats[id] = info.timestamp;
-                            triggerAlert(); 
-                        }
+                        if (!unreadChats[id] || unreadChats[id] !== info.timestamp) { unreadChats[id] = info.timestamp; triggerAlert(); }
                     }
                     const div = document.createElement("div");
                     div.className = "chat-item" + (currentChat === id ? " active" : "") + (unreadChats[id] ? " has-new" : "");
                     div.innerHTML = `<div class="chat-title">${id}</div><div class="chat-preview">${info.lastMsg}</div><div class="badge"></div>`;
-                    div.onclick = function() {
-                        delete unreadChats[id]; 
-                        checkRemainingUnread();
-                        document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active', 'has-new'));
-                        div.classList.add('active');
-                        loadChat(id);
-                    };
+                    div.onclick = function() { delete unreadChats[id]; checkRemainingUnread(); document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active', 'has-new')); div.classList.add('active'); loadChat(id); };
                     listDiv.appendChild(div);
                 });
             });
         }
-
         function triggerAlert() {
             try {
                 var ctx = new (window.AudioContext || window.webkitAudioContext)();
                 if (ctx) {
-                    var osc = ctx.createOscillator();
-                    var gain = ctx.createGain();
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(587.33, ctx.currentTime); 
-                    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-                    osc.start();
-                    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12); 
-                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-                    osc.stop(ctx.currentTime + 0.4);
+                    var osc = ctx.createOscillator(); var gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination);
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(587.33, ctx.currentTime); gain.gain.setValueAtTime(0.3, ctx.currentTime); osc.start();
+                    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4); osc.stop(ctx.currentTime + 0.4);
                 }
             } catch(e) {}
-
-            if (!flashInterval) {
-                let isFlash = false;
-                flashInterval = setInterval(() => {
-                    document.title = isFlash ? "【新消息】HO体育 客服后台" : "HO体育 - 客服管理后台";
-                    isFlash = !isFlash;
-                }, 800);
-            }
+            if (!flashInterval) { let isFlash = false; flashInterval = setInterval(() => { document.title = isFlash ? "【新消息】HO体育 客服后台" : "HO体育 - 客服管理后台"; isFlash = !isFlash; }, 800); }
         }
-
-        function checkRemainingUnread() {
-            if (Object.keys(unreadChats).length === 0) {
-                clearInterval(flashInterval);
-                flashInterval = null;
-                document.title = "HO体育 - 客服管理后台";
-            }
-        }
-
+        function checkRemainingUnread() { if (Object.keys(unreadChats).length === 0) { clearInterval(flashInterval); flashInterval = null; document.title = "HO体育 - 客服管理后台"; } }
         function loadChat(id) {
-            currentChat = id;
-            document.getElementById("current-title").innerText = id;
-            const box = document.getElementById("messages");
-            box.innerHTML = "";
-
+            currentChat = id; document.getElementById("current-title").innerText = id; const box = document.getElementById("messages"); box.innerHTML = ""; currentChatImageItems = [];
             db.ref("chats/" + id + "/messages").off();
             db.ref("chats/" + id + "/messages").on("child_added", snap => {
-                const msg = snap.val();
-                const container = document.createElement("div");
-                container.style.width = "100%";
-                container.style.marginBottom = "15px";
-
+                const msg = snap.val(); const container = document.createElement("div"); container.style.width = "100%"; container.style.marginBottom = "15px";
                 let content = msg.text;
-                if (msg.type === "image") { content = `<img src="${msg.url}" onclick="window.open('${msg.url}')" />`; }
-
-                if (msg.sender === "admin") {
-                    container.innerHTML = `<div class="bubble-name">HO体育-甜甜</div><div class="msg-row admin"><div class="bubble">${content}</div><div class="avatar"></div></div>`;
-                } else {
-                    container.innerHTML = `<div class="msg-row user"><div class="avatar">粉</div><div class="bubble">${content}</div></div>`;
-                }
-                box.appendChild(container);
-                box.scrollTop = box.scrollHeight;
+                if (msg.type === "image") { const imgIndex = currentChatImageItems.length; currentChatImageItems.push({ src: msg.url, w: 1000, h: 1000 }); content = `<img src="${msg.url}" onclick="openAdminPhotoSwipe(${imgIndex})" onload="updateAdminImageSize(this, ${imgIndex})" />`; }
+                if (msg.sender === "admin") { container.innerHTML = `<div class="bubble-name">HO体育-甜甜</div><div class="msg-row admin"><div class="bubble">${content}</div><div class="avatar"></div></div>`; }
+                else { container.innerHTML = `<div class="msg-row user"><div class="avatar">粉</div><div class="bubble">${content}</div></div>`; }
+                box.appendChild(container); setTimeout(() => { box.scrollTop = box.scrollHeight; }, 100);
             });
         }
-
-        function sendText() {
-            const input = document.getElementById("msg-input");
-            const text = input.value.trim();
-            if (!text || !currentChat || !db) return;
-            pushMsg({ sender: "admin", type: "text", text: text, timestamp: Date.now() });
-            input.value = "";
-        }
-
-        function pushMsg(msgObj) {
-            db.ref("chats/" + currentChat + "/messages").push(msgObj);
-            db.ref("chats/" + currentChat + "/info").set({ lastMsg: "甜甜: " + (msgObj.type === "image" ? "[图片]" : msgObj.text), timestamp: Date.now() });
-        }
-
-        function uploadFile(input) {
-            const file = input.files[0];
-            if (!file || !currentChat || !db) return;
-
-            const inputField = document.getElementById("msg-input");
-            inputField.placeholder = "正在加密传输图像...";
-            inputField.disabled = true;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                inputField.placeholder = "输入回复内容...";
-                inputField.disabled = false;
-                pushMsg({ sender: "admin", type: "image", url: e.target.result, timestamp: Date.now() });
-            };
-            reader.readAsDataURL(file);
-        }
+        function sendText() { const input = document.getElementById("msg-input"); const text = input.value.trim(); if (!text || !currentChat || !db) return; pushMsg({ sender: "admin", type: "text", text: text, timestamp: Date.now() }); input.value = ""; }
+        function pushMsg(msgObj) { db.ref("chats/" + currentChat + "/messages").push(msgObj); db.ref("chats/" + currentChat + "/info").set({ lastMsg: "甜甜: " + (msgObj.type === "image" ? "[图片]" : msgObj.text), timestamp: Date.now() }); }
+        function updateAdminImageSize(imgHtml, index) { if (currentChatImageItems[index]) { currentChatImageItems[index].w = imgHtml.naturalWidth || 1000; currentChatImageItems[index].h = imgHtml.naturalHeight || 1000; } }
+        function openAdminPhotoSwipe(index) { var pswpElement = document.querySelectorAll('.pswp')[0]; var options = { index: index, bgOpacity: 0.9, showHideOpacity: true, shareEl: false, tapToClose: true }; var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, currentChatImageItems, options); gallery.init(); }
+        function uploadFile(input) { const file = input.files[0]; if (!file || !currentChat || !db) return; const inputField = document.getElementById("msg-input"); inputField.placeholder = "正在加密传输图像..."; inputField.disabled = true; const reader = new FileReader(); reader.onload = function(e) { inputField.placeholder = "输入回复内容..."; inputField.disabled = false; pushMsg({ sender: "admin", type: "image", url: e.target.result, timestamp: Date.now() }); }; reader.readAsDataURL(file); }
     </script>
 </body>
 </html>
