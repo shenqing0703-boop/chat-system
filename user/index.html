@@ -2,67 +2,115 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>在线客服</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线咨询</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
     <script src="../firebase.js"></script>
-    
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; max-width: 500px; }
-        #messages { height: 350px; border: 1px solid #ccc; overflow-y: auto; padding: 10px; margin-bottom: 10px; background: #f9f9f9; }
-        #input-area { display: flex; }
-        #msg-input { flex: 1; padding: 8px; border: 1px solid #ccc; }
-        button { padding: 8px 20px; background: #00a854; color: white; border: none; margin-left: 5px; cursor: pointer; }
-        button:hover { background: #008f47; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; display: flex; justify-content: center; height: 100vh; }
+        .chat-container { width: 100%; max-width: 500px; background: #fff; display: flex; flex-direction: column; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
+        .chat-header { background: #00a854; color: white; padding: 15px; text-align: center; font-size: 16px; font-weight: bold; }
+        #messages { flex: 1; padding: 15px; overflow-y: auto; background: #eaeaea; }
+        .msg-row { display: flex; margin-bottom: 12px; width: 100%; }
+        .msg-row.user { justify-content: flex-end; }
+        .msg-row.admin { justify-content: flex-start; }
+        .bubble { max-width: 70%; padding: 10px 14px; border-radius: 8px; font-size: 14px; line-height: 1.4; word-break: break-all; }
+        .user .bubble { background: #95ec69; color: #000; }
+        .admin .bubble { background: #fff; color: #000; }
+        .bubble img { max-width: 100%; border-radius: 4px; margin-top: 5px; cursor: pointer; }
+        .input-area { display: flex; align-items: center; padding: 10px; background: #f7f7f7; border-top: 1px solid #ddd; }
+        #msg-input { flex: 1; height: 38px; padding: 0 10px; border: 1px solid #ddd; border-radius: 4px; outline: none; font-size: 14px; }
+        .btn { height: 38px; border: none; border-radius: 4px; margin-left: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+        .btn-send { background: #00a854; color: white; padding: 0 18px; }
+        .btn-file { background: #e9e9e9; color: #333; padding: 0 12px; font-size: 20px; }
+        #file-input { display: none; }
     </style>
 </head>
 <body>
 
-    <h3>在线咨询</h3>
+<div class="chat-container">
+    <div class="chat-header">在线客服</div>
     <div id="messages"></div>
-    <div id="input-area">
-        <input type="text" id="msg-input" placeholder="请输入您想咨询的问题..." onkeydown="if(event.keyCode==13) send()">
-        <button onclick="send()">发送</button>
+    <div class="input-area">
+        <label class="btn btn-file" for="file-input">📎</label>
+        <input type="file" id="file-input" accept="image/*,application/pdf" onchange="uploadFile(this)">
+        <input type="text" id="msg-input" placeholder="请输入您的问题..." onkeydown="if(event.keyCode==13) sendText()">
+        <button class="btn btn-send" onclick="sendText()">发送</button>
     </div>
+</div>
 
-    <script>
-        let userId = localStorage.getItem("chat_user_id");
-        if (!userId) {
-            userId = "chat_" + Date.now();
-            localStorage.setItem("chat_user_id", userId);
+<script>
+    let userId = localStorage.getItem("chat_user_id") || "chat_" + Date.now();
+    localStorage.setItem("chat_user_id", userId);
+
+    const box = document.getElementById("messages");
+
+    db.ref("chats/" + userId + "/messages").on("child_added", snap => {
+        const msg = snap.val();
+        const row = document.createElement("div");
+        row.className = "msg-row " + msg.sender;
+        
+        let content = msg.text;
+        if (msg.type === "image") {
+            content = `<img src="${msg.url}" onclick="window.open('${msg.url}')" />`;
+        } else if (msg.type === "file") {
+            content = `📄 <a href="${msg.url}" target="_blank" style="color:#00a854;">下载文件 (${msg.name})</a>`;
         }
 
-        const box = document.getElementById("messages");
+        row.innerHTML = `<div class="bubble">${content}</div>`;
+        box.appendChild(row);
+        box.scrollTop = box.scrollHeight;
+    });
 
-        db.ref("chats/" + userId + "/messages").on("child_added", snap => {
-            const msg = snap.val();
-            const div = document.createElement("div");
-            div.style.margin = "10px 0";
+    function sendText() {
+        const input = document.getElementById("msg-input");
+        const text = input.value.trim();
+        if (!text) return;
+        pushMsg({ sender: "user", type: "text", text: text, timestamp: Date.now() });
+        input.value = "";
+    }
 
-            if (msg.sender === "user") {
-                div.innerHTML = `<p style="text-align:right; margin:0;"><span style="background:#e6f7ff; padding:5px 10px; border-radius:4px; display:inline-block;">${msg.text}</span></p>`;
-            } else {
-                div.innerHTML = `<p style="text-align:left; margin:0;"><span style="background:#f6ffed; padding:5px 10px; border-radius:4px; display:inline-block;"><b>客服:</b> ${msg.text}</span></p>`;
-            }
+    function pushMsg(msgObj) {
+        db.ref("chats/" + userId + "/messages").push(msgObj);
+    }
 
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-        });
+    // 快捷公共图床上传逻辑
+    function uploadFile(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append("file", file);
 
-        function send() {
-            const input = document.getElementById("msg-input");
-            const text = input.value.trim();
-            if (!text) return;
+        // 提示上传中
+        const inputField = document.getElementById("msg-input");
+        inputField.placeholder = "文件上传中，请稍候...";
+        inputField.disabled = true;
 
-            db.ref("chats/" + userId + "/messages").push({
-                sender: "user",
-                text: text,
-                timestamp: Date.now()
+        fetch("https://telegra.ph/upload", { method: "POST", body: formData })
+            .then(res => res.json())
+            .then(data => {
+                inputField.placeholder = "请输入您的问题...";
+                inputField.disabled = false;
+                if (data && data[0] && data[0].src) {
+                    const fileUrl = "https://telegra.ph" + data[0].src;
+                    const isImg = file.type.startsWith("image/");
+                    pushMsg({
+                        sender: "user",
+                        type: isImg ? "image" : "file",
+                        url: fileUrl,
+                        name: file.name,
+                        timestamp: Date.now()
+                    });
+                }
+            })
+            .catch(err => {
+                alert("上传失败，请重试");
+                inputField.placeholder = "请输入您的问题...";
+                inputField.disabled = false;
             });
-            input.value = "";
-        }
-    </script>
+    }
+</script>
 </body>
 </html>
