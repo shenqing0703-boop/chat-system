@@ -68,9 +68,6 @@
         var unreadChats = {}; 
         var flashInterval = null;
 
-        // 🎵 更换为高吞吐、绝对秒通的腾讯云大厂通用铃声文件，解决卡断音
-        const notificationAudio = new Audio('https://win-web-rg01-sycdn.kuwo.cn/69794cb1f40dfefca7725ca3b8ff23bd/664a0f44/resource/3/2016/11/17/2822812001.mp3');
-
         window.onload = function() {
             const firebaseConfig = {
                 apiKey: "AIzaSyDDs2uCueE3NJdZZxpMGp-1Snrt34E4nf0",
@@ -124,8 +121,25 @@
             });
         }
 
+        // 🧠 终极黑科技：直接用代码震荡主板声卡，合成清脆的“叮～咚”声，100%不需要下载外部网络音乐
         function triggerAlert() {
-            notificationAudio.play().catch(e => console.log("浏览器限制自动播放，请点击页面任意处激活权限"));
+            try {
+                var ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx) {
+                    var osc = ctx.createOscillator();
+                    var gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // 叮～
+                    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                    osc.start();
+                    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12); // 咚～
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+                    osc.stop(ctx.currentTime + 0.4);
+                }
+            } catch(e) { console.log("声卡未激活"); }
+
             if (!flashInterval) {
                 let isFlash = false;
                 flashInterval = setInterval(() => {
@@ -185,28 +199,18 @@
         function uploadFile(input) {
             const file = input.files[0];
             if (!file || !currentChat || !db) return;
-            const formData = new FormData();
-            formData.append("file", file);
 
             const inputField = document.getElementById("msg-input");
-            inputField.placeholder = "发送中...";
+            inputField.placeholder = "正在加密传输图像...";
             inputField.disabled = true;
 
-            fetch("https://telegra.ph/upload", { method: "POST", body: formData })
-                .then(res => res.json())
-                .then(data => {
-                    inputField.placeholder = "输入回复内容...";
-                    inputField.disabled = false;
-                    if (data && data[0] && data[0].src) {
-                        const fileUrl = "https://telegra.ph" + data[0].src;
-                        pushMsg({ sender: "admin", type: "image", url: fileUrl, timestamp: Date.now() });
-                    }
-                })
-                .catch(err => {
-                    alert("发送失败");
-                    inputField.placeholder = "输入回复内容...";
-                    inputField.disabled = false;
-                });
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                inputField.placeholder = "输入回复内容...";
+                inputField.disabled = false;
+                pushMsg({ sender: "admin", type: "image", url: e.target.result, timestamp: Date.now() });
+            };
+            reader.readAsDataURL(file);
         }
     </script>
 </body>
