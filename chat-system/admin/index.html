@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>后台客服</title>
+</head>
+<body>
+
+<h2>客服后台</h2>
+
+<div style="display:flex;">
+  <div id="list" style="width:30%;border-right:1px solid #ccc;"></div>
+  <div style="width:70%;">
+    <div id="box"></div>
+    <input id="reply">
+    <button onclick="send()">发送</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script src="../firebase.js"></script>
+<script src="admin.js"></script>
+
+</body>
+</html>
