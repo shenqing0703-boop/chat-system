@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>在线咨询</title>
+    <title>HO体育 - 在线咨询</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="../firebase.js"></script>
@@ -13,32 +13,37 @@
         .chat-container { width: 100%; max-width: 500px; background: #fff; display: flex; flex-direction: column; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
         .chat-header { background: #00a854; color: white; padding: 15px; text-align: center; font-size: 16px; font-weight: bold; }
         #messages { flex: 1; padding: 15px; overflow-y: auto; background: #eaeaea; }
-        .msg-row { display: flex; margin-bottom: 12px; width: 100%; }
+        .msg-row { display: flex; margin-bottom: 15px; width: 100%; align-items: flex-start; }
         .msg-row.user { justify-content: flex-end; }
         .msg-row.admin { justify-content: flex-start; }
         
-        /* 头像样式 */
-        .avatar { width: 36px; height: 36px; border-radius: 4px; margin: 0 10px; flex-shrink: 0; background-size: cover; background-position: center; }
-        .user .avatar { background-image: url('https://img2.baidu.com/it/u=3093226316,2111005707&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500'); } /* 这里替换你的默认用户头像链接 */
-        .admin .avatar { background-image: url('https://img2.baidu.com/it/u=1004169720,2962309831&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500'); } /* 这里替换你的默认客服头像链接 */
+        /* 终极定制头像样式 */
+        .avatar { width: 38px; height: 38px; border-radius: 50%; margin: 0 10px; flex-shrink: 0; background-size: cover; background-position: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 1px solid #eee; }
+        /* 粉丝头像：灰色匿名图标 */
+        .user .avatar { background-color: #ccc; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'); } 
+        /* 客服头像：HO体育 LOGO */
+        .admin .avatar { background-color: #fff; background-image: url('https://files/image_10.png'); } 
         
-        .bubble { max-width: calc(70% - 46px); padding: 10px 14px; border-radius: 8px; font-size: 14px; line-height: 1.4; word-break: break-all; }
-        .user .bubble { background: #95ec69; color: #000; }
-        .admin .bubble { background: #fff; color: #000; }
+        .bubble-name { font-size: 12px; color: #888; margin-bottom: 4px; }
+        .admin .bubble-name { margin-left: 58px; text-align: left; }
+        
+        .bubble { max-width: calc(70% - 48px); padding: 11px 15px; border-radius: 8px; font-size: 14px; line-height: 1.5; word-break: break-all; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .user .bubble { background: #95ec69; color: #000; border-top-right-radius: 0; }
+        .admin .bubble { background: #fff; color: #000; border-top-left-radius: 0; }
         
         .bubble img { max-width: 100%; border-radius: 4px; margin-top: 5px; cursor: pointer; }
         .input-area { display: flex; align-items: center; padding: 10px; background: #f7f7f7; border-top: 1px solid #ddd; }
-        #msg-input { flex: 1; height: 38px; padding: 0 10px; border: 1px solid #ddd; border-radius: 4px; outline: none; font-size: 14px; }
-        .btn { height: 38px; border: none; border-radius: 4px; margin-left: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
-        .btn-send { background: #00a854; color: white; padding: 0 18px; }
-        .btn-file { background: #e9e9e9; color: #333; padding: 0 12px; font-size: 20px; }
+        #msg-input { flex: 1; height: 40px; padding: 0 12px; border: 1px solid #ddd; border-radius: 4px; outline: none; font-size: 14px; }
+        .btn { height: 40px; border: none; border-radius: 4px; margin-left: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .btn-send { background: #00a854; color: white; padding: 0 20px; }
+        .btn-file { background: #e9e9e9; color: #333; padding: 0 14px; font-size: 22px; border: 1px solid #ccc; }
         #file-input { display: none; }
     </style>
 </head>
 <body>
 
 <div class="chat-container">
-    <div class="chat-header">在线客服</div>
+    <div class="chat-header">HO体育 - 在线客服</div>
     <div id="messages"></div>
     <div class="input-area">
         <label class="btn btn-file" for="file-input">📎</label>
@@ -57,7 +62,8 @@
     db.ref("chats/" + userId + "/messages").on("child_added", snap => {
         const msg = snap.val();
         const row = document.createElement("div");
-        row.className = "msg-row " + msg.sender;
+        row.style.width = "100%";
+        row.style.marginBottom = "15px";
         
         let content = msg.text;
         if (msg.type === "image") {
@@ -66,11 +72,11 @@
             content = `📄 <a href="${msg.url}" target="_blank" style="color:#00a854;">下载文件 (${msg.name})</a>`;
         }
 
-        // 修改这里，加上头像
+        // 终极定制布局：客服名字写死
         if (msg.sender === "user") {
-            row.innerHTML = `<div class="bubble">${content}</div><div class="avatar"></div>`;
+            row.innerHTML = `<div class="msg-row user"><div class="bubble">${content}</div><div class="avatar"></div></div>`;
         } else {
-            row.innerHTML = `<div class="avatar"></div><div class="bubble">${content}</div>`;
+            row.innerHTML = `<div class="bubble-name">HO体育-甜甜</div><div class="msg-row admin"><div class="avatar"></div><div class="bubble">${content}</div></div>`;
         }
         
         box.appendChild(row);
@@ -89,16 +95,14 @@
         db.ref("chats/" + userId + "/messages").push(msgObj);
     }
 
-    // 快捷公共图床上传逻辑
     function uploadFile(input) {
         const file = input.files[0];
         if (!file) return;
         const formData = new FormData();
         formData.append("file", file);
 
-        // 提示上传中
         const inputField = document.getElementById("msg-input");
-        inputField.placeholder = "文件上传中，请稍候...";
+        inputField.placeholder = "文件上传中...";
         inputField.disabled = true;
 
         fetch("https://telegra.ph/upload", { method: "POST", body: formData })
@@ -109,17 +113,11 @@
                 if (data && data[0] && data[0].src) {
                     const fileUrl = "https://telegra.ph" + data[0].src;
                     const isImg = file.type.startsWith("image/");
-                    pushMsg({
-                        sender: "user",
-                        type: isImg ? "image" : "file",
-                        url: fileUrl,
-                        name: file.name,
-                        timestamp: Date.now()
-                    });
+                    pushMsg({ sender: "user", type: isImg ? "image" : "file", url: fileUrl, name: file.name, timestamp: Date.now() });
                 }
             })
             .catch(err => {
-                alert("上传失败，请重试");
+                alert("上传失败");
                 inputField.placeholder = "请输入您的问题...";
                 inputField.disabled = false;
             });
