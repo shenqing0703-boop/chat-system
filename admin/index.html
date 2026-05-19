@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <title>HO体育 - 客服管理后台</title>
     
-    <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/firebase/8.10.1/firebase-app.js"></script>
-    <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/firebase/8.10.1/firebase-database.js"></script>
+    <script src="https://cdn.staticfile.org/firebase/8.10.1/firebase-app.js"></script>
+    <script src="https://cdn.staticfile.org/firebase/8.10.1/firebase-database.js"></script>
     
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -20,9 +20,9 @@
         .main-chat { flex: 1; display: flex; flex-direction: column; background: #f5f5f5; }
         .main-header { padding: 15px; background: #fff; font-size: 16px; font-weight: bold; border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; }
         
-        /* 顶部大厅 HO体育 LOGO */
-        .header-avatar { width: 34px; height: 34px; border-radius: 50%; background-color: #000; margin-right: 10px; background-size: cover; background-position: center;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="black"/><text x="50" y="45" font-family="Arial, sans-serif" font-weight="900" font-size="26" fill="white" dominant-baseline="middle" text-anchor="middle">HO</text><text x="50" y="75" font-family="SimHei, sans-serif" font-weight="bold" font-size="20" fill="%2300a854" dominant-baseline="middle" text-anchor="middle">体育</text></svg>'); 
+        /* 顶部大厅 HO体育 LOGO 头像 */
+        .header-avatar { width: 34px; height: 34px; border-radius: 50%; background-color: #fff; margin-right: 10px; background-size: cover; background-position: center; border: 1px solid #eee;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="white"/><path d="M35,25 C42,32 58,32 65,25 C58,38 42,38 35,25 Z M35,25 L35,70 C42,65 58,65 65,70 L65,25" fill="%2300a2ed"/><path d="M50,25 L50,70" stroke="white" stroke-width="2"/><text x="50" y="52" font-family="Arial, sans-serif" font-weight="900" font-size="20" fill="%23111" text-anchor="middle">HO</text><text x="50" y="80" font-family="SimHei, sans-serif" font-weight="bold" font-size="16" fill="%2300a854" text-anchor="middle">体育</text></svg>'); 
         }
 
         #messages { flex: 1; padding: 20px; overflow-y: auto; background: #f4f5f7; }
@@ -32,11 +32,9 @@
         
         .avatar { width: 38px; height: 38px; border-radius: 50%; margin: 0 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-size: cover; background-position: center; }
         .user .avatar { background-color: #00bac7; } 
-        
-        /* 客服气泡旁 HO体育 LOGO */
         .admin .avatar { 
-            background-color: #000; 
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="black"/><text x="50" y="45%" font-family="Arial, sans-serif" font-weight="900" font-size="26" fill="white" dominant-baseline="middle" text-anchor="middle">HO</text><text x="50" y="75%" font-family="SimHei, sans-serif" font-weight="bold" font-size="20" fill="%2300a854" dominant-baseline="middle" text-anchor="middle">体育</text></svg>'); 
+            background-color: #fff; 
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="white" stroke="%23eee" stroke-width="1"/><path d="M35,25 C42,32 58,32 65,25 C58,38 42,38 35,25 Z M35,25 L35,70 C42,65 58,65 65,70 L65,25" fill="%2300a2ed"/><path d="M50,25 L50,70" stroke="white" stroke-width="2"/><text x="50" y="52" font-family="Arial, sans-serif" font-weight="900" font-size="20" fill="%23111" text-anchor="middle">HO</text><text x="50" y="80" font-family="SimHei, sans-serif" font-weight="bold" font-size="16" fill="%2300a854" text-anchor="middle">体育</text></svg>'); 
         } 
 
         .bubble-name { font-size: 12px; color: #888; margin-bottom: 2px; text-align: right; margin-right: 58px; }
@@ -66,43 +64,49 @@
     </div>
 
     <script>
-        // 🔒 100% 对应你提供给我的真实 Firebase 密钥
-        const firebaseConfig = {
-            apiKey: "AIzaSyDDs2uCueE3NJdZZxpMGp-1Snrt34E4nf0",
-            authDomain: "chat-system-87d17.firebaseapp.com",
-            databaseURL: "https://chat-system-87d17-default-rtdb.firebaseio.com",
-            projectId: "chat-system-87d17",
-            storageBucket: "chat-system-87d17.firebasestorage.app",
-            messagingSenderId: "988901895318",
-            appId: "1:988901895318:web:b1736c54a224570253a6b7",
-            measurementId: "G-JQZ8CCQ7TR"
+        var db;
+        var currentChat = null;
+
+        window.onload = function() {
+            const firebaseConfig = {
+                apiKey: "AIzaSyDDs2uCueE3NJdZZxpMGp-1Snrt34E4nf0",
+                authDomain: "chat-system-87d17.firebaseapp.com",
+                databaseURL: "https://chat-system-87d17-default-rtdb.firebaseio.com",
+                projectId: "chat-system-87d17",
+                storageBucket: "chat-system-87d17.firebasestorage.app",
+                messagingSenderId: "988901895318",
+                appId: "1:988901895318:web:b1736c54a224570253a6b7"
+            };
+
+            if (typeof firebase !== 'undefined') {
+                if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+                db = firebase.database();
+                initAdmin();
+            } else {
+                document.getElementById("messages").innerHTML = "<div style='text-align:center;color:red;padding:20px;'>核心引擎载入失败，请按 Ctrl+F5 强刷</div>";
+            }
         };
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
+        function initAdmin() {
+            db.ref("chats").on("value", snap => {
+                const data = snap.val();
+                const listDiv = document.getElementById("list");
+                listDiv.innerHTML = "";
+                if (!data) { listDiv.innerHTML = "<div style='padding:20px;color:gray;text-align:center;'>暂无新消息</div>"; return; }
+
+                for (let id in data) {
+                    const div = document.createElement("div");
+                    div.className = "chat-item" + (currentChat === id ? " active" : "");
+                    div.innerHTML = `<div class="chat-item-avatar">粉</div>👤 粉丝: ${id.substring(5, 11)}...`;
+                    div.onclick = function() {
+                        document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+                        div.classList.add('active');
+                        loadChat(id);
+                    };
+                    listDiv.appendChild(div);
+                }
+            });
         }
-        const db = firebase.database();
-
-        let currentChat = null;
-
-        db.ref("chats").on("value", snap => {
-            const data = snap.val();
-            const listDiv = document.getElementById("list");
-            listDiv.innerHTML = "";
-            if (!data) { listDiv.innerHTML = "<div style='padding:20px;color:gray;text-align:center;'>暂无新消息</div>"; return; }
-
-            for (let id in data) {
-                const div = document.createElement("div");
-                div.className = "chat-item" + (currentChat === id ? " active" : "");
-                div.innerHTML = `<div class="chat-item-avatar">粉</div>👤 粉丝: ${id.substring(5, 11)}...`;
-                div.onclick = () => {
-                    document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
-                    div.classList.add('active');
-                    loadChat(id);
-                };
-                listDiv.appendChild(div);
-            }
-        });
 
         function loadChat(id) {
             currentChat = id;
@@ -131,7 +135,7 @@
         function sendText() {
             const input = document.getElementById("msg-input");
             const text = input.value.trim();
-            if (!text || !currentChat) return;
+            if (!text || !currentChat || !db) return;
             db.ref("chats/" + currentChat + "/messages").push({ sender: "admin", text: text, timestamp: Date.now() });
             input.value = "";
         }
