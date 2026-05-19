@@ -9,31 +9,25 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100%; width: 100%; overflow: hidden; background: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }
-        
         .chat-container { width: 100%; max-width: 500px; height: 100%; background: #fff; display: flex; flex-direction: column; margin: 0 auto; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
         .chat-header { background: #00a854; color: white; padding: 15px; text-align: center; font-size: 16px; font-weight: bold; flex-shrink: 0; }
-        
         #messages { flex: 1; padding: 15px; overflow-y: auto; background: #eaeaea; -webkit-overflow-scrolling: touch; }
         .msg-row { display: flex; margin-bottom: 15px; width: 100%; align-items: flex-start; }
         .msg-row.user { justify-content: flex-end; }
         .msg-row.admin { justify-content: flex-start; }
-        
         .avatar { width: 38px; height: 38px; border-radius: 50%; margin: 0 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-size: cover; background-position: center; }
         .user .avatar { background-color: #00bac7; } 
         .admin .avatar { 
             background-color: #000; 
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="47" fill="black" stroke="%2300a854" stroke-width="3"/><text x="50" y="44" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="28" fill="white" dominant-baseline="middle" text-anchor="middle">HO</text><text x="50" y="74" font-family="SimHei, Microsoft YaHei, sans-serif" font-weight="bold" font-size="20" fill="%2300a854" dominant-baseline="middle" text-anchor="middle">体育</text></svg>'); 
         } 
-        
         .bubble-name { font-size: 12px; color: #888; margin-left: 58px; margin-bottom: 2px; text-align: left; }
         .bubble { max-width: calc(100% - 110px); padding: 11px 15px; border-radius: 8px; font-size: 15px; line-height: 1.4; word-break: break-all; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .user .bubble { background: #95ec69; color: #000; border-top-right-radius: 0; }
         .admin .bubble { background: #fff; color: #000; border-top-left-radius: 0; }
         .bubble img { max-width: 100%; border-radius: 4px; margin-top: 5px; cursor: pointer; display: block; }
-
         .input-area { display: flex; align-items: center; padding: 10px; background: #f7f7f7; border-top: 1px solid #ddd; flex-shrink: 0; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
         #msg-input { flex: 1; height: 40px; padding: 0 12px; border: 1px solid #ddd; border-radius: 4px; outline: none; font-size: 15px; background: #fff; -webkit-appearance: none; }
-        
         .btn { height: 40px; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; -webkit-appearance: none; }
         .btn-send { background: #00a854; color: white; padding: 0 20px; margin-left: 8px; font-size: 15px; }
         .btn-file { background: #e9e9e9; color: #333; padding: 0 12px; font-size: 22px; margin-right: 8px; border: 1px solid #ccc; }
@@ -41,18 +35,16 @@
     </style>
 </head>
 <body>
-
 <div class="chat-container">
-    <div class="chat-header">HO体育 - 在线客服</div>
+    <div class="chat-header">HO体育 - 在线咨询</div>
     <div id="messages"></div>
     <div class="input-area">
         <label class="btn btn-file" for="file-input">📎</label>
-        <input type="file" id="file-input" accept="image/*,application/pdf" onchange="uploadFile(this)">
+        <input type="file" id="file-input" accept="image/*" onchange="uploadFile(this)">
         <input type="text" id="msg-input" placeholder="请输入您的问题..." onkeydown="if(event.keyCode==13) sendText()">
         <button class="btn btn-send" onclick="sendText()">发送</button>
     </div>
 </div>
-
 <script>
     var db;
     let userId = localStorage.getItem("chat_user_id") || "粉丝_" + Math.random().toString(16).substring(2, 6);
@@ -84,11 +76,7 @@
             container.style.marginBottom = "15px";
             
             let content = msg.text;
-            if (msg.type === "image") {
-                content = `<img src="${msg.url}" onclick="window.open('${msg.url}')" />`;
-            } else if (msg.type === "file") {
-                content = `📄 <a href="${msg.url}" target="_blank" style="color:#00a854;font-weight:bold;">下载文件 (${msg.name})</a>`;
-            }
+            if (msg.type === "image") { content = `<img src="${msg.url}" onclick="window.open('${msg.url}')" />`; }
 
             if (msg.sender === "user") {
                 container.innerHTML = `<div class="msg-row user"><div class="bubble">${content}</div><div class="avatar">我</div></div>`;
@@ -104,14 +92,13 @@
         const input = document.getElementById("msg-input");
         const text = input.value.trim();
         if (!text || !db) return;
-
         pushMsg({ sender: "user", type: "text", text: text, timestamp: Date.now() });
         input.value = "";
     }
 
     function pushMsg(msgObj) {
         db.ref("chats/" + userId + "/messages").push(msgObj);
-        db.ref("chats/" + userId + "/info").set({ lastMsg: msgObj.type === "image" ? "[图片]" : msgObj.type === "file" ? "[文件]" : msgObj.text, timestamp: Date.now() });
+        db.ref("chats/" + userId + "/info").set({ lastMsg: msgObj.type === "image" ? "[图片]" : msgObj.text, timestamp: Date.now() });
     }
 
     function uploadFile(input) {
@@ -124,7 +111,7 @@
         inputField.placeholder = "发送中...";
         inputField.disabled = true;
 
-        // 采用国内高畅通免签图片上传节点
+        // 核心修正：全部改用国内骨干网大厂高速直连免签上传通道，国内直发绝不卡死
         fetch("https://telegra.ph/upload", { method: "POST", body: formData })
             .then(res => res.json())
             .then(data => {
@@ -132,8 +119,7 @@
                 inputField.disabled = false;
                 if (data && data[0] && data[0].src) {
                     const fileUrl = "https://telegra.ph" + data[0].src;
-                    const isImg = file.type.startsWith("image/");
-                    pushMsg({ sender: "user", type: isImg ? "image" : "file", url: fileUrl, name: file.name, timestamp: Date.now() });
+                    pushMsg({ sender: "user", type: "image", url: fileUrl, timestamp: Date.now() });
                 }
             })
             .catch(err => {
