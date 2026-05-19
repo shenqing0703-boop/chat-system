@@ -6,24 +6,24 @@
     
     <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/firebase/8.10.1/firebase-app.js"></script>
     <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/firebase/8.10.1/firebase-database.js"></script>
-    
     <script src="../firebase.js"></script>
+    
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; display: flex; height: 100vh; overflow: hidden; }
         .sidebar { width: 280px; background: #fff; border-right: 1px solid #e8e8e8; display: flex; flex-direction: column; }
         .sidebar-header { padding: 15px; font-size: 16px; font-weight: bold; border-bottom: 1px solid #e8e8e8; background: #fafafa; color: #00a854; text-align: center; }
         #list { flex: 1; overflow-y: auto; }
-        .chat-item { padding: 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.3s; font-size: 14px; color: #333; display: flex; align-items: center; }
+        .chat-item { padding: 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; font-size: 14px; color: #333; display: flex; align-items: center; }
         .chat-item:hover, .chat-item.active { background: #e6f7ff; color: #1890ff; font-weight: bold; }
         .chat-item-avatar { width: 30px; height: 30px; border-radius: 50%; background-color: #00bac7; margin-right: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; }
         
         .main-chat { flex: 1; display: flex; flex-direction: column; background: #f5f5f5; }
         .main-header { padding: 15px; background: #fff; font-size: 16px; font-weight: bold; border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; }
         
-        /* 顶部大厅的 HO体育 LOGO 头像 */
+        /* 顶部大厅 HO体育 LOGO */
         .header-avatar { width: 34px; height: 34px; border-radius: 50%; background-color: #000; margin-right: 10px; background-size: cover; background-position: center;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="black"/><text x="50%" y="42%" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="28" fill="white" domaintant-baseline="middle" text-anchor="middle">HO</text><text x="50%" y="78%" font-family="SimHei, Microsoft YaHei, sans-serif" font-weight="bold" font-size="20" fill="%2300a854" domaintant-baseline="middle" text-anchor="middle">体育</text></svg>'); 
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="black"/><text x="50" y="45" font-family="Arial, sans-serif" font-weight="900" font-size="26" fill="white" dominant-baseline="middle" text-anchor="middle">HO</text><text x="50" y="75" font-family="SimHei, sans-serif" font-weight="bold" font-size="20" fill="%2300a854" dominant-baseline="middle" text-anchor="middle">体育</text></svg>'); 
         }
 
         #messages { flex: 1; padding: 20px; overflow-y: auto; background: #f4f5f7; }
@@ -32,25 +32,22 @@
         .msg-row.user { justify-content: flex-start; }
         
         .avatar { width: 38px; height: 38px; border-radius: 50%; margin: 0 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-size: cover; background-position: center; }
-        .user .avatar { background-color: #00bac7; background-image: none; } 
+        .user .avatar { background-color: #00bac7; } 
         
-        /* 客服气泡旁的 LOGO 头像 */
+        /* 客服气泡旁 HO体育 LOGO */
         .admin .avatar { 
             background-color: #000; 
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="black"/><text x="50%" y="42%" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="28" fill="white" domaintant-baseline="middle" text-anchor="middle">HO</text><text x="50%" y="78%" font-family="SimHei, Microsoft YaHei, sans-serif" font-weight="bold" font-size="20" fill="%2300a854" domaintant-baseline="middle" text-anchor="middle">体育</text></svg>'); 
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="black"/><text x="50%" y="45%" font-family="Arial, sans-serif" font-weight="900" font-size="26" fill="white" dominant-baseline="middle" text-anchor="middle">HO</text><text x="50%" y="75%" font-family="SimHei, sans-serif" font-weight="bold" font-size="20" fill="%2300a854" dominant-baseline="middle" text-anchor="middle">体育</text></svg>'); 
         } 
 
-        .bubble-name { font-size: 12px; color: #888; margin-bottom: 4px; }
-        .admin .bubble-name { text-align: right; margin-right: 58px; }
-
+        .bubble-name { font-size: 12px; color: #888; margin-bottom: 2px; text-align: right; margin-right: 58px; }
         .bubble { max-width: calc(65% - 48px); padding: 11px 15px; border-radius: 8px; font-size: 14px; line-height: 1.5; word-break: break-all; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .admin .bubble { background: #95ec69; color: #000; border-top-right-radius: 0; }
         .user .bubble { background: #fff; color: #000; border-top-left-radius: 0; }
         
         .input-area { display: flex; align-items: center; padding: 15px; background: #fff; border-top: 1px solid #e8e8e8; }
         #msg-input { flex: 1; height: 42px; padding: 0 15px; border: 1px solid #d9d9d9; border-radius: 4px; outline: none; font-size: 14px; }
-        .btn { height: 42px; border: none; border-radius: 4px; margin-left: 10px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .btn-send { background: #00a854; color: white; padding: 0 25px; }
+        .btn-send { height: 42px; border: none; border-radius: 4px; margin-left: 10px; cursor: pointer; font-size: 14px; background: #00a854; color: white; padding: 0 25px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -65,7 +62,7 @@
         <div id="messages"></div>
         <div class="input-area">
             <input type="text" id="msg-input" placeholder="输入回复内容..." onkeydown="if(event.keyCode==13) sendText()">
-            <button class="btn btn-send" onclick="sendText()">发送</button>
+            <button class="btn-send" onclick="sendText()">发送</button>
         </div>
     </div>
 
@@ -100,19 +97,17 @@
             db.ref("chats/" + id + "/messages").off();
             db.ref("chats/" + id + "/messages").on("child_added", snap => {
                 const msg = snap.val();
-                const row = document.createElement("div");
-                row.style.width = "100%";
-                row.style.marginBottom = "18px";
-
-                let content = msg.text;
+                const container = document.createElement("div");
+                container.style.width = "100%";
+                container.style.marginBottom = "15px";
 
                 if (msg.sender === "admin") {
-                    row.innerHTML = `<div class="bubble-name">HO体育-甜甜</div><div class="msg-row admin"><div class="bubble">${content}</div><div class="avatar"></div></div>`;
+                    container.innerHTML = `<div class="bubble-name">HO体育-甜甜</div><div class="msg-row admin"><div class="bubble">${msg.text}</div><div class="avatar"></div></div>`;
                 } else {
-                    row.innerHTML = `<div class="msg-row user"><div class="avatar">粉</div><div class="bubble">${content}</div></div>`;
+                    container.innerHTML = `<div class="msg-row user"><div class="avatar">粉</div><div class="bubble">${msg.text}</div></div>`;
                 }
 
-                box.appendChild(row);
+                box.appendChild(container);
                 box.scrollTop = box.scrollHeight;
             });
         }
